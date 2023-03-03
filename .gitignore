@@ -16,9 +16,10 @@ src\common\*.py[cod]
 src\*.py[cod]
 
 # ignore folder : idea
-.idea/
+/.idea/
 /data/
-/draw//JoUtil.egg-info/
+/draw/
+/Yolo_v1/__pycache__
 
 
 
