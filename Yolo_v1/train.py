@@ -40,8 +40,8 @@ NUM_WORKERS     = 3
 PIN_MEMORY      = True
 LOAD_MODEL      = True
 BEST_MAP        = -1
-BEST_MODEL_FILE = "best.pth"
-LAST_MODEL_FILE = "last.pth"
+BEST_MODEL_FILE = r"/home/ldq/hand_yolo/best.pth"
+LAST_MODEL_FILE = r"/home/ldq/hand_yolo/last.pth"
 
 IMG_DIR     = r"/home/ldq/hand_yolo/data/images"
 LABEL_DIR   = r"/home/ldq/hand_yolo/data/labels"
@@ -87,6 +87,8 @@ def main():
     model       = Yolov1(split_size=7, num_boxes=2, num_classes=20).to(DEVICE)
     optimizer   = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
     loss_fn     = YoloLoss()
+    loss_fn.lambda_coord = 5
+    loss_fn.lambda_noobj = 0.2  # 0.5 
 
     if LOAD_MODEL:
         load_checkpoint(torch.load(BEST_MODEL_FILE), model, optimizer)
@@ -134,6 +136,10 @@ def main():
 
         # get pred_box
         pred_boxes, target_boxes = get_bboxes(train_loader, model, iou_threshold=0.5, threshold=0.4, device=DEVICE)
+        
+        # train
+        train_fn(train_loader, model, optimizer, loss_fn)
+
         # get map
         mean_avg_prec = mean_average_precision(pred_boxes, target_boxes, iou_threshold=0.5, box_format="midpoint")
         print(f"{epoch} : Train mAP: {mean_avg_prec}")
@@ -144,11 +150,10 @@ def main():
             save_checkpoint(checkpoint, filename=BEST_MODEL_FILE)
             time.sleep(10)
         
-        checkpoint = {"state_dict": model.state_dict(), "optimizer": optimizer.state_dict(),}
-        save_checkpoint(checkpoint, filename=LAST_MODEL_FILE)
-        time.sleep(10)
+        # checkpoint = {"state_dict": model.state_dict(), "optimizer": optimizer.state_dict(),}
+        # save_checkpoint(checkpoint, filename=LAST_MODEL_FILE)
+        # time.sleep(10)
         
-        train_fn(train_loader, model, optimizer, loss_fn)
 
 
 if __name__ == "__main__":
