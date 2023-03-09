@@ -47,31 +47,66 @@ class YOLODataset(Dataset):
         return len(self.annotations)
 
     def __getitem__(self, index):
+
+
+        # 还没到下面的 box 部分就已经崩溃了
+
+
         label_path = os.path.join(self.label_dir, self.annotations.iloc[index, 1])
-        bboxes = np.roll(np.loadtxt(fname=label_path, delimiter=" ", ndmin=2), 4, axis=1).tolist()
+        
+        # print("* start")
+        # print(label_path)
+        
+        bboxes = np.roll(np.loadtxt(fname=label_path, delimiter=" ", ndmin=2), 4, axis=1).tolist()        
         img_path = os.path.join(self.img_dir, self.annotations.iloc[index, 0])
         image = np.array(Image.open(img_path).convert("RGB"))
 
         if self.transform:
+
+            # print(bboxes)
+
+            # for each_box in bboxes:
+            #     print(each_box)
+            #     cx, cy, w, h, c = each_box
+            #     print(cx + w/2.0)
+            #     print(cy + h/2.0)
+
             augmentations = self.transform(image=image, bboxes=bboxes)
             image = augmentations["image"]
             bboxes = augmentations["bboxes"]
+            
+            # print("* ", bboxes)
 
         # Below assumes 3 scale predictions (as paper) and same num of anchors per scale
         targets = [torch.zeros((self.num_anchors // 3, S, S, 6)) for S in self.S]
         for box in bboxes:
+            # print(box)
             iou_anchors = iou(torch.tensor(box[2:4]), self.anchors)
             anchor_indices = iou_anchors.argsort(descending=True, dim=0)
             x, y, width, height, class_label = box
+
+            x = min(0.99999, x)
+            y = min(0.99999, y)
+
             has_anchor = [False] * 3  # each scale should have one anchor
             for anchor_idx in anchor_indices:
                 scale_idx = anchor_idx // self.num_anchors_per_scale
                 anchor_on_scale = anchor_idx % self.num_anchors_per_scale
                 S = self.S[scale_idx]
                 i, j = int(S * y), int(S * x)  # which cell
+                # try:
                 anchor_taken = targets[scale_idx][anchor_on_scale, i, j, 0]
+                # except Exception as e:
+                #     print(len(targets))
+                #     print(targets)
+                #     print(anchor_on_scale, i, j)
+                #     print(S, x, y)
+                #     print(width, height)
+                #     exit()
+
                 if not anchor_taken and not has_anchor[scale_idx]:
                     targets[scale_idx][anchor_on_scale, i, j, 0] = 1
+
                     x_cell, y_cell = S * x - j, S * y - i  # both between [0,1]
                     width_cell, height_cell = (
                         width * S,

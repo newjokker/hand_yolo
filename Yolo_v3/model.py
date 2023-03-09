@@ -14,8 +14,10 @@ List is structured by "B" indicating a residual block followed by the number of 
 "U" is for upsampling the feature map and concatenating with a previous layer
 """
 config = [
+    # out_channels, kernel_size, stride
     (32, 3, 1),
     (64, 3, 2),
+    # num repeat
     ["B", 1],
     (128, 3, 2),
     ["B", 2],
@@ -29,6 +31,7 @@ config = [
     (1024, 3, 1),
     "S",
     (256, 1, 1),
+    # upsample
     "U",
     (256, 1, 1),
     (512, 3, 1),
@@ -37,6 +40,7 @@ config = [
     "U",
     (128, 1, 1),
     (256, 3, 1),
+    # ScalePrediction
     "S",
 ]
 
@@ -77,7 +81,6 @@ class ResidualBlock(nn.Module):
                 x = x + layer(x)
             else:
                 x = layer(x)
-
         return x
 
 
@@ -86,8 +89,7 @@ class ScalePrediction(nn.Module):
         super().__init__()
         self.pred = nn.Sequential(
             CNNBlock(in_channels, 2 * in_channels, kernel_size=3, padding=1),
-            CNNBlock(
-                2 * in_channels, (num_classes + 5) * 3, bn_act=False, kernel_size=1
+            CNNBlock(2 * in_channels, (num_classes + 5) * 3, bn_act=False, kernel_size=1
             ),
         )
         self.num_classes = num_classes

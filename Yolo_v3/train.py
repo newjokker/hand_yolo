@@ -58,15 +58,11 @@ def train_fn(train_loader, model, optimizer, loss_fn, scaler, scaled_anchors):
 
 def main():
     model = YOLOv3(num_classes=config.NUM_CLASSES).to(config.DEVICE)
-    optimizer = optim.Adam(
-        model.parameters(), lr=config.LEARNING_RATE, weight_decay=config.WEIGHT_DECAY
-    )
+    optimizer = optim.Adam(model.parameters(), lr=config.LEARNING_RATE, weight_decay=config.WEIGHT_DECAY)
     loss_fn = YoloLoss()
     scaler = torch.cuda.amp.GradScaler()
 
-    train_loader, test_loader, train_eval_loader = get_loaders(
-        train_csv_path=config.DATASET + "/train.csv", test_csv_path=config.DATASET + "/test.csv"
-    )
+    train_loader, test_loader, train_eval_loader = get_loaders(train_csv_path=config.DATASET + "/train.csv", test_csv_path=config.DATASET + "/test.csv")
 
     if config.LOAD_MODEL:
         load_checkpoint(
@@ -90,7 +86,7 @@ def main():
         #print("On Train loader:")
         #check_class_accuracy(model, train_loader, threshold=config.CONF_THRESHOLD)
 
-        if epoch > 0 and epoch % 3 == 0:
+        if epoch > 0 and epoch % 1 == 0:
             check_class_accuracy(model, test_loader, threshold=config.CONF_THRESHOLD)
             pred_boxes, true_boxes = get_evaluation_bboxes(
                 test_loader,

@@ -5,11 +5,11 @@ import torch
 from albumentations.pytorch import ToTensorV2
 from utils import seed_everything
 
-DATASET = 'PASCAL_VOC'
+DATASET = r'/home/ldq/hand_yolo/data'
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # seed_everything()  # If you want deterministic behavior
-NUM_WORKERS = 4
-BATCH_SIZE = 32
+NUM_WORKERS = 1
+BATCH_SIZE = 4
 IMAGE_SIZE = 416
 NUM_CLASSES = 20
 LEARNING_RATE = 1e-5
@@ -22,7 +22,7 @@ S = [IMAGE_SIZE // 32, IMAGE_SIZE // 16, IMAGE_SIZE // 8]
 PIN_MEMORY = True
 LOAD_MODEL = True
 SAVE_MODEL = True
-CHECKPOINT_FILE = "checkpoint.pth.tar"
+CHECKPOINT_FILE = r"/home/ldq/hand_yolo/yolov3_check_point.pth"
 IMG_DIR = DATASET + "/images/"
 LABEL_DIR = DATASET + "/labels/"
 
@@ -62,7 +62,7 @@ train_transforms = A.Compose(
         A.Normalize(mean=[0, 0, 0], std=[1, 1, 1], max_pixel_value=255,),
         ToTensorV2(),
     ],
-    bbox_params=A.BboxParams(format="yolo", min_visibility=0.4, label_fields=[],),
+    # bbox_params=A.BboxParams(format="yolo", min_visibility=0.4, label_fields=[],),
 )
 test_transforms = A.Compose(
     [
@@ -73,7 +73,7 @@ test_transforms = A.Compose(
         A.Normalize(mean=[0, 0, 0], std=[1, 1, 1], max_pixel_value=255,),
         ToTensorV2(),
     ],
-    bbox_params=A.BboxParams(format="yolo", min_visibility=0.4, label_fields=[]),
+    # bbox_params=A.BboxParams(format="yolo", min_visibility=0.4, label_fields=[]),
 )
 
 PASCAL_CLASSES = [
